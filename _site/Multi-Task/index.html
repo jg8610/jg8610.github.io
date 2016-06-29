@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Multi-Task Learning in Tensorflow (Part 1) – Jonathan Godwin – Machine Learning</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="A step-by-step tutorial on how to create multi-task neural nets in Tensorflow.
+
+" />
+    <meta property="og:description" content="A step-by-step tutorial on how to create multi-task neural nets in Tensorflow.
+
+" />
+    
+    <meta name="author" content="Jonathan Godwin" />
+
+    
+    <meta property="og:title" content="Multi-Task Learning in Tensorflow (Part 1)" />
+    <meta property="twitter:title" content="Multi-Task Learning in Tensorflow (Part 1)" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <link rel="alternate" type="application/rss+xml" title="Jonathan Godwin - Machine Learning" href="/feed.xml" />
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>
+
+  </head>
+
+  <body>
+    
+    
+    <div class="intro-header">    
+      <div class="container">
+        <div class="post-heading">
+            <h1>Multi-Task Learning in Tensorflow (Part 1)</h1>
+            <span class="meta">Posted by <a href="/about"> Jonathan Godwin
+            </a> on March  8, 2016
+            <a href="/"> { Return to Blog }</a>
+            </span>
+        </div>
+            
+      </div>
+    </div>
+    
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+ <div class="space-extra-small">
+ </div>
+
+  <div class="entry">
+    <h3 id="a-step-by-step-tutorial-on-how-to-create-multi-task-neural-nets-in-tensorflow">A step-by-step tutorial on how to create multi-task neural nets in Tensorflow.</h3>
+
+<hr />
+
+<h1 id="introduction">Introduction</h1>
+
+<h2 id="why-multi-task-learning">Why Multi-Task Learning</h2>
+
+<p>When you think about the way people learn to do new things, they often use their experience and knowledge of the world to speed up the learning process. When I learn a new language, especially a related one, I use my knowledge languages I already speak to make shortcuts. The process works the other way too - learning a new language can help you understand and speak your own better.</p>
+
+<p>Our brains learn to do multiple different tasks at the same time - we have the same brain architecture whether we are translating English to German or English to French. If we were to use a Machine Learning algorithm to do both of these tasks, we would call ‘multi-task’ learning.</p>
+
+<p>It’s one of the most interesting and exciting areas of research for Machine Learning in coming years, radically reducing the amount of data required to learn new concepts. One of the great promises of Deep Learning is that, with the power of the models and simple ways to share parameters between tasks, we should be able to make significant progress in multi-task learning.</p>
+
+<p>As I started to experiment in this area I came across a bit of a road block - while it was an easy to understand the architecture changes required to implement multi-task learning, it was harder to figure out how to implement it in Tensorflow. To do anything but standard nets in Tensorflow requires a good understanding of how Tensorflow works, but most of the stock examples don’t provide helpful guidance. I hope the following tutorial explains some key concepts simply, and helps those who are struggling.</p>
+
+<h2 id="what-we-are-going-to-do">What We Are Going To Do</h2>
+
+<h3 id="part-1">Part 1</h3>
+<ol>
+  <li>
+    <p><strong>Understand Tensorflow Computation Graphs With An Example</strong>. Doing multi-task learning with Tensorflow requires understanding how computation graphs work - skip if you already know.</p>
+  </li>
+  <li>
+    <p><strong>Understand How We Can Use Graphs For Multi-Task Learning</strong>. We’ll go through an example of how to adapt a simple graph to do Multi-Task Learning.</p>
+  </li>
+</ol>
+
+<h3 id="part-2">Part 2</h3>
+<ol>
+  <li>
+    <p><strong>Build A Graph for POS Tagging and Shallow Parsing</strong>. We’ll fill in a template that trains a net for two related linguistic tasks. Don’t worry, you don’t need to know what they are!</p>
+  </li>
+  <li>
+    <p><strong>Train A Net Jointly And Separately</strong>. We’ll actually train a model in two different ways. You should be able to do this on your laptop.</p>
+  </li>
+</ol>
+
+<hr />
+
+<h1 id="understanding-computation-graphs-with-a-toy-example">Understanding Computation Graphs With A Toy Example</h1>
+
+<p>The Computation Graph is the thing that makes Tensorflow (and other similar packages) fast. It’s an integral part of machinery of Deep Learning, but can be confusing.</p>
+
+<p>There are some neat features of a graph that mean it’s very easy to conduct multi-task learning, but first we’ll keep things simple and explain the key concepts.</p>
+
+<hr />
+
+<h3 id="definition-computation-graph">Definition: Computation Graph</h3>
+
+<p>The <strong>Computation Graph</strong> is a <strong>template</strong> for computation (re: algorithm) you are going to run. It <strong>doesn’t perform any calculations</strong>, but it means that your computer can conduct backpropagation far more quickly.</p>
+
+<p>If you ask Tensorflow for a <strong>result of a calculation</strong> it will <strong>only make those calculations required</strong> for the job, <strong>not the whole graph</strong>.</p>
+
+<hr />
+
+<h2 id="a-toy-example---linear-transformation-setting-up-the-graph">A Toy Example - Linear Transformation: Setting Up The Graph</h2>
+
+<p>We’re going to look at the graph for a simple calculation - a linear transformation of our inputs, and taking the square loss:</p>
+
+<p><img src="../images/toy.png" /></p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># Import Tensorflow</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
+
+<span class="c"># ======================</span>
+<span class="c"># Define the Graph</span>
+<span class="c"># ======================</span>
+
+<span class="c"># Create Placeholders For X And Y (for feeding in data)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s">"X"</span><span class="p">)</span> <span class="c"># Our input is 10x10</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s">"Y"</span><span class="p">)</span> <span class="c"># Our output is 10x1</span>
+
+<span class="c"># Create a Trainable Variable, "W", our weights for the linear transformation</span>
+<span class="n">W</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s">"W"</span><span class="p">)</span>
+
+<span class="c"># Define Your Loss Function</span>
+<span class="n">Loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="nb">pow</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">W</span><span class="p">)),</span><span class="mi">2</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s">"Loss"</span><span class="p">)</span></code></pre></figure>
+
+<p>There are a few things to emphasis about this graph:</p>
+
+<ul>
+  <li>
+    <p><strong>If we were to run this code right now, we would get no output</strong>. Remember that a Computation Graph is just a template - it doesn’t do anything. If we want an answer, we have to tell Tensorflow to run the computation using a <strong>Session</strong>.</p>
+  </li>
+  <li>
+    <p><strong>We haven’t explictly created a graph object</strong>. You might expect that we would have a create a graph object somewhere in order for Tensorflow to know that we wanted to create a graph. In fact, by using the tensorflow operations, we are telling Tensorflow what parts of our code are in the graph.</p>
+  </li>
+</ul>
+
+<p><strong>Tip: Keep Your Graph Separate</strong>. You’ll typically be doing a fair amount data manipulation and computation outside of the graph, which means keeping track of what is and isn’t available inside of python a bit confusing. I like to put my graph in a separate file, and often in a separate class to keep concerns separated, but this isn’t required.</p>
+
+<h2 id="a-toy-example---linear-transformation-getting-results">A Toy Example - Linear Transformation: Getting Results</h2>
+
+<p>Computations on your Graph are conducted inside a tensorflow <strong>Session</strong>. To get results from your session you need to provide it with two things: Target Results and Inputs.</p>
+
+<ol>
+  <li>
+    <p><strong>Target Results or Operations</strong>. You tell tensorflow what parts of the graph you want to return values for, and it will <strong>automatically figure out what calculations within need to be run</strong>. You can also call operations, for example to initialise your variables.</p>
+  </li>
+  <li>
+    <p><strong>Inputs As Required (‘Feed Dict’)</strong>. Some calculations will you to provide data. In this case, you construct the graph with a <strong>placeholder</strong> for this data, and feed it in at computation time. Not all calculations or operations will require an input - for many, all the information is already contained in the graph.</p>
+  </li>
+</ol>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># Import Tensorflow</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c"># ======================</span>
+<span class="c"># Define the Graph</span>
+<span class="c"># ======================</span>
+
+<span class="c"># Create Placeholders For X And Y (for feeding in data)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s">"X"</span><span class="p">)</span> <span class="c"># Our input is 10x10</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span><span class="n">name</span><span class="o">=</span><span class="s">"Y"</span><span class="p">)</span> <span class="c"># Our output is 10x1</span>
+
+<span class="c"># Create a Trainable Variable, "W", our weights for the linear transformation</span>
+<span class="n">W</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="s">"W"</span><span class="p">)</span>
+
+<span class="c"># Define Your Loss Function</span>
+<span class="n">Loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="nb">pow</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">W</span><span class="p">)),</span><span class="mi">2</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s">"Loss"</span><span class="p">)</span>
+
+<span class="c"># ======================</span>
+<span class="c"># Run The Computation Using A Session</span>
+<span class="c"># ======================</span>
+
+<span class="k">with</span> <span class="n">sess</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">session</span><span class="p">():</span> <span class="c"># set up the session</span>
+  <span class="n">Model_Loss</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">Loss</span><span class="p">,</span> <span class="c"># the first argument is the name of the tensorflow variabl you want to return</span>
+                <span class="p">{</span> <span class="c"># the second argument is the data for the placeholders</span>
+                  <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">]),</span>
+                  <span class="n">Y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">randomd</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+                <span class="p">})</span></code></pre></figure>
+
+<hr />
+
+<h1 id="how-to-use-graphs-for-multi-task-learning">How To Use Graphs for Multi-Task Learning</h1>
+
+<p>When we create a Neural Net that performs multiple tasks we want to have some parts of the network that are shared, and other parts of the network that are specific to each individual task. When we’re training, we want information from each task to be transferred in the shared parts of the network.</p>
+
+<p>So, to start, let’s draw a diagram of a simple two-task network that has a shared layer and a specific layer for each individual task. We’ve going to feed the outputs of this into our loss function with our targets. I’ve labelled where we’re going to want to create placeholders in the graph.</p>
+
+<p><img src="../images/basic_shared.png" /></p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#  GRAPH CODE</span>
+<span class="c"># ============</span>
+
+<span class="c"># Import Tensorflow</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
+
+<span class="c"># ======================</span>
+<span class="c"># Define the Graph</span>
+<span class="c"># ======================</span>
+
+<span class="c"># Define the Placeholders</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"X"</span><span class="p">)</span>
+<span class="n">Y1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"Y1"</span><span class="p">)</span>
+<span class="n">Y2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"Y2"</span><span class="p">)</span>
+
+<span class="c"># Define the weights for the layers</span>
+<span class="n">shared_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"share_W"</span><span class="p">)</span>
+<span class="n">Y1_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"share_Y1"</span><span class="p">)</span>
+<span class="n">Y2_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"share_Y2"</span><span class="p">)</span>
+
+<span class="c"># Construct the Layers with RELU Activations</span>
+<span class="n">shared_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">shared_layer_weights</span><span class="p">))</span>
+<span class="n">Y1_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">shared_layer</span><span class="p">,</span><span class="n">Y1_layer_weights</span><span class="p">))</span>
+<span class="n">Y2_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">shared_layer</span><span class="p">,</span><span class="n">Y2_layer_weights</span><span class="p">))</span>
+
+<span class="c"># Calculate Loss</span>
+<span class="n">Y1_Loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">l2_loss</span><span class="p">(</span><span class="n">Y1</span><span class="p">,</span><span class="n">Y1_layer</span><span class="p">)</span>
+<span class="n">Y2_Loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">l2_loss</span><span class="p">(</span><span class="n">Y2</span><span class="p">,</span><span class="n">Y2_layer</span><span class="p">)</span></code></pre></figure>
+
+<p>When we are training this network, <strong>we want the parameters of the Task 1 layer to not change no matter how wrong we get Task 2</strong>, but <strong>the parameters of the shared layer to change with both tasks</strong>. This might seem a little difficult - normally you only have one optimiser in a graph, because you only optimise one loss function. Thankfully, using the properties of the graph it’s very easy to train this sort of model in two ways.</p>
+
+<h2 id="alternate-training">Alternate Training</h2>
+
+<p>The first solution is particularly suited to situations where you’ll have a batch of Task 1 data and then a batch of Task 2 data.</p>
+
+<p>Remember that Tensorflow automatically figures out which calculations are needed for the operation you requested, and only conducts those calculations. This means that <strong>if we define an optimiser on only one of the tasks, it will only train the parameters required to compute that task - and will leave the rest alone</strong>. Since Task 1 relies only on the Task 1 and Shared Layers, the Task 2 layer will be untouched. Let’s draw another diagram with the desired optimisers at the end of each task.</p>
+
+<p><img src="../images/basic_task_op.png" /></p>
+
+<div class="space-small"></div>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#  GRAPH CODE</span>
+<span class="c"># ============</span>
+
+<span class="c"># Import Tensorflow</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
+
+<span class="c"># ======================</span>
+<span class="c"># Define the Graph</span>
+<span class="c"># ======================</span>
+
+<span class="c"># Define the Placeholders</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"X"</span><span class="p">)</span>
+<span class="n">Y1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"Y1"</span><span class="p">)</span>
+<span class="n">Y2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"Y2"</span><span class="p">)</span>
+
+<span class="c"># Define the weights for the layers</span>
+<span class="n">shared_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"share_W"</span><span class="p">)</span>
+<span class="n">Y1_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"share_Y1"</span><span class="p">)</span>
+<span class="n">Y2_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"share_Y2"</span><span class="p">)</span>
+
+<span class="c"># Construct the Layers with RELU Activations</span>
+<span class="n">shared_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">shared_layer_weights</span><span class="p">))</span>
+<span class="n">Y1_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">shared_layer</span><span class="p">,</span><span class="n">Y1_layer_weights</span><span class="p">))</span>
+<span class="n">Y2_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">shared_layer</span><span class="p">,</span><span class="n">Y2_layer_weights</span><span class="p">))</span>
+
+<span class="c"># Calculate Loss</span>
+<span class="n">Y1_Loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">l2_loss</span><span class="p">(</span><span class="n">Y1</span><span class="p">,</span><span class="n">Y1_layer</span><span class="p">)</span>
+<span class="n">Y2_Loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">l2_loss</span><span class="p">(</span><span class="n">Y2</span><span class="p">,</span><span class="n">Y2_layer</span><span class="p">)</span>
+
+<span class="c"># Create Optimisers</span>
+<span class="n">Y1_Op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">()</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">Y1_Loss</span><span class="p">)</span> <span class="c"># Adam Optimizer</span>
+<span class="n">Y2_Op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">()</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">Y2_Loss</span><span class="p">)</span> <span class="c"># Adam Optimizer</span></code></pre></figure>
+
+<p>We can conduct Multi-Task learning by alternately calling each task optimiser, which means we can continually transfer some of the information from each task to the other. In a loose sense, we are discovering the ‘commonality’ between the tasks. The following code implements this for our easy example. If you are following along, paste this at the bottom of the previous code:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c"># Calculation (Session) Code</span>
+<span class="c"># ==========================</span>
+
+<span class="c"># open the session</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">session</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+  <span class="k">for</span> <span class="n">iters</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+      <span class="n">_</span><span class="p">,</span> <span class="n">Y1_loss</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">Y1_op</span><span class="p">,</span> <span class="n">Y1_loss</span><span class="p">],</span>
+                        <span class="p">{</span>
+                          <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">]),</span>
+                          <span class="n">Y1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span>
+                          <span class="n">Y2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+                          <span class="p">})</span>
+      <span class="k">print</span><span class="p">(</span><span class="n">Y1_loss</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">_</span><span class="p">,</span> <span class="n">Y2_loss</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">Y1_op</span><span class="p">,</span> <span class="n">Y1_loss</span><span class="p">],</span>
+                        <span class="p">{</span>
+                          <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">]),</span>
+                          <span class="n">Y1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span>
+                          <span class="n">Y2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+                          <span class="p">})</span>
+      <span class="k">print</span><span class="p">(</span><span class="n">Y2_loss</span><span class="p">)</span></code></pre></figure>
+
+<h3 id="tips-when-is-alternate-training-good">Tips: When is Alternate Training Good?</h3>
+
+<p>Alternate training is a good idea when you have two different datasets for each of the different tasks (for example, translating from English to French and English to German). By designing a network in this way, you can improve the performance of each of your individual tasks without having to find more task-specific training data.</p>
+
+<p>Alternate training is the most common situation you’ll find yourself in, because there aren’t that many datasets that have two or more outputs. We’ll come on to one example, but the clearest examples are where you want to build hierarchy into your tasks. For example, in vision, you might want one of your tasks to predict the rotation of an object, the other what the object would look like if you changes the camera angle. These two tasks are obviously related - in fact the rotation probably comes before the image generation.</p>
+
+<h3 id="tips-when-is-alternate-training-less-good">Tips: When is Alternate Training Less Good?</h3>
+
+<p>Alternate training can easily become biased towards a specific task. The first way is obvious - if one of your tasks has a far larger dataset than the other, then if you train in proportion to the dataset sizes your shared layer will contain more information about the more significant task.</p>
+
+<p>The second is less so. If you train alternately, the final task your model see will create a bias in the parameters. There isn’t any obvious way that you can overcome this problem, but it does that mean that in circumstances where you don’t have to train alternately, you shouldn’t.</p>
+
+<h2 id="training-at-the-same-time---joint-training">Training at the Same Time - Joint Training</h2>
+
+<p>When you have a dataset with multiple labels for each input, what you really want is to train the tasks at the same time. The question is, how do you preserve the independence of the task-specific functions? The answer is surprisingly simple - you just add up the loss functions of the individual tasks and optimise on that. Below is a diagram that shows a network that can train jointly, with the accompanying code:</p>
+
+<p><img src="../images/joint_op.png" /></p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#  GRAPH CODE</span>
+<span class="c"># ============</span>
+
+<span class="c"># Import Tensorflow</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
+
+<span class="c"># ======================</span>
+<span class="c"># Define the Graph</span>
+<span class="c"># ======================</span>
+
+<span class="c"># Define the Placeholders</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"X"</span><span class="p">)</span>
+<span class="n">Y1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"Y1"</span><span class="p">)</span>
+<span class="n">Y2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s">"float"</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"Y2"</span><span class="p">)</span>
+
+<span class="c"># Define the weights for the layers</span>
+<span class="n">shared_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"share_W"</span><span class="p">)</span>
+<span class="n">Y1_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"share_Y1"</span><span class="p">)</span>
+<span class="n">Y2_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s">"share_Y2"</span><span class="p">)</span>
+
+<span class="c"># Construct the Layers with RELU Activations</span>
+<span class="n">shared_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">shared_layer_weights</span><span class="p">))</span>
+<span class="n">Y1_layer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">shared_layer</span><span class="p">,</span><span class="n">Y1_layer_weights</span><span class="p">))</span>
+<span class="n">Y2_layer_weights</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">shared_layer</span><span class="p">,</span><span class="n">Y2_layer_weights</span><span class="p">))</span>
+
+<span class="c"># Calculate Loss</span>
+<span class="n">Y1_Loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">l2_loss</span><span class="p">(</span><span class="n">Y1</span><span class="p">,</span><span class="n">Y1_layer</span><span class="p">)</span>
+<span class="n">Y2_Loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">l2_loss</span><span class="p">(</span><span class="n">Y2</span><span class="p">,</span><span class="n">Y2_layer</span><span class="p">)</span>
+
+<span class="c"># Calculate Joint Loss</span>
+<span class="n">Joint_Loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Y1_Loss</span><span class="p">,</span><span class="n">Y2_Loss</span><span class="p">)</span>
+
+<span class="c"># Graph Optimiser</span>
+<span class="n">Optimiser</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">()</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span><span class="n">Joint_Loss</span><span class="p">)</span> <span class="c"># Adam Optimizer</span></code></pre></figure>
+
+<h2 id="conclusions-and-next-steps">Conclusions and Next Steps</h2>
+
+<p>In this post we’ve gone through the basic principles behind multi-task learning in deep neural nets. If you’ve used Tensorflow before, and have your own project, then hopefully this has given you enough to get started.</p>
+
+<p>For those of you who want a more meaty, more detailed example of how this can be used to improve performance in multiple tasks, then stay tuned for part 2 of the tutorial where we’ll delve into Natural Language Processing to build a multi-task model for shallow parsing and part of speech tagging.</p>
+
+  </div>
+
+  
+</article>
+
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+            <div class="svg-icon">
+          
+<a href="mailto:j godwin at gmail dot com"><i class="icon-envelope icon-2x"></i></a>
+
+
+<a href="https://github.com/jg8610"><i class="icon-github icon-2x"></i></a>
+
+
+
+
+
+
+
+
+            </div>
+        </footer>
+      </div>
+    </div>
+
+
+    
+
+  </body>
+</html>
