@@ -56,7 +56,7 @@ If you ask Tensorflow for a **result of a calculation** it will **only make thos
 
 We're going to look at the graph for a simple calculation - a linear transformation of our inputs, and taking the square loss:
 
-<img src='../images/toy.png' >
+<img src='../images/toy.png' style="max-height:300px">
 
 {% highlight python %}
 # Import Tensorflow
@@ -134,7 +134,7 @@ When we create a Neural Net that performs multiple tasks we want to have some pa
 
 So, to start, let's draw a diagram of a simple two-task network that has a shared layer and a specific layer for each individual task. We've going to feed the outputs of this into our loss function with our targets. I've labelled where we're going to want to create placeholders in the graph.
 
-<img src='../images/basic_shared.png'>
+<img src='../images/basic_shared.png' style="max-height:300px">
 
 {% highlight python %}
 #  GRAPH CODE
@@ -177,7 +177,7 @@ The first solution is particularly suited to situations where you'll have a batc
 
 Remember that Tensorflow automatically figures out which calculations are needed for the operation you requested, and only conducts those calculations. This means that **if we define an optimiser on only one of the tasks, it will only train the parameters required to compute that task - and will leave the rest alone**. Since Task 1 relies only on the Task 1 and Shared Layers, the Task 2 layer will be untouched. Let's draw another diagram with the desired optimisers at the end of each task.
 
-<img src='../images/basic_task_op.png'>
+<img src='../images/basic_task_op.png' style="max-height:300px">
 
 <div class="space-small"></div>
 
@@ -259,7 +259,7 @@ The second is less so. If you train alternately, the final task your model see w
 
 When you have a dataset with multiple labels for each input, what you really want is to train the tasks at the same time. The question is, how do you preserve the independence of the task-specific functions? The answer is surprisingly simple - you just add up the loss functions of the individual tasks and optimise on that. Below is a diagram that shows a network that can train jointly, with the accompanying code:
 
-<img src='../images/joint_op.png'  >
+<img src='../images/joint_op.png' style="max-height:300px" >
 
 {% highlight python %}
 #  GRAPH CODE
