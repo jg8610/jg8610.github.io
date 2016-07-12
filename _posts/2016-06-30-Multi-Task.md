@@ -20,7 +20,7 @@ Our brains learn to do multiple different tasks at the same time - we have the s
 
 It's one of the most interesting and exciting areas of research for Machine Learning in coming years, radically reducing the amount of data required to learn new concepts. One of the great promises of Deep Learning is that, with the power of the models and simple ways to share parameters between tasks, we should be able to make significant progress in multi-task learning.
 
-As I started to experiment in this area I came across a bit of a road block - while it was an easy to understand the architecture changes required to implement multi-task learning, it was harder to figure out how to implement it in Tensorflow. To do anything but standard nets in Tensorflow requires a good understanding of how it works, but most of the stock examples don't provide helpful guidance. I hope the following tutorial explains some key concepts simply, and helps those who are struggling.
+As I started to experiment in this area I came across a bit of a road block - while it was easy to understand the architecture changes required to implement multi-task learning, it was harder to figure out how to implement it in Tensorflow. To do anything but standard nets in Tensorflow requires a good understanding of how it works, but most of the stock examples don't provide helpful guidance. I hope the following tutorial explains some key concepts simply, and helps those who are struggling.
 
 ## What We Are Going To Do
 
@@ -32,7 +32,7 @@ As I started to experiment in this area I came across a bit of a road block - wh
 ### Part 2
 3. **Build A Graph for POS Tagging and Shallow Parsing**. We'll fill in a template that trains a net for two related linguistic tasks. Don't worry, you don't need to know what they are!
 
-4. **Train A Net Jointly And Separately**. We'll actually train a model in two different ways. You should be able to do this on your laptop.
+4. **Train A Net Jointly and Separately**. We'll actually train a model in two different ways. You should be able to do this on your laptop.
 
 ------
 
@@ -62,7 +62,7 @@ We're going to look at the graph for a simple calculation - a linear transformat
 
 {% highlight python %}
 # Import Tensorflow and numpy
-import tensorflow as tf
+import Tensorflow as tf
 import numpy as np
 
 # ======================
@@ -86,21 +86,21 @@ There are a few things to emphasis about this graph:
 
 * **If we were to run this code right now, we would get no output**. Remember that a Computation Graph is just a template - it doesn't do anything. If we want an answer, we have to tell Tensorflow to run the computation using a **Session**.
 
-* **We haven't explictly created a graph object**. You might expect that we would have a create a graph object somewhere in order for Tensorflow to know that we wanted to create a graph. In fact, by using the tensorflow operations, we are telling Tensorflow what parts of our code are in the graph.
+* **We haven't explicitly created a graph object**. You might expect that we would have to create a graph object somewhere in order for Tensorflow to know that we wanted to create a graph. In fact, by using the Tensorflow operations, we are telling Tensorflow what parts of our code are in the graph.
 
-**Tip: Keep Your Graph Separate**. You'll typically be doing a fair amount data manipulation and computation outside of the graph, which means keeping track of what is and isn't available inside of python a bit confusing. I like to put my graph in a separate file, and often in a separate class to keep concerns separated, but this isn't required.
+**Tip: Keep Your Graph Separate**. You'll typically be doing a fair amount of data manipulation and computation outside of the graph, which means keeping track of what is and isn't available inside of python a bit confusing. I like to put my graph in a separate file, and often in a separate class to keep concerns separated, but this isn't required.
 
 ## A Toy Example - Linear Transformation: Getting Results
 
-Computations on your Graph are conducted inside a tensorflow **Session**. To get results from your session you need to provide it with two things: Target Results and Inputs.
+Computations on your Graph are conducted inside a Tensorflow **Session**. To get results from your session you need to provide it with two things: Target Results and Inputs.
 
-1. **Target Results or Operations**. You tell tensorflow what parts of the graph you want to return values for, and it will **automatically figure out what calculations within need to be run**. You can also call operations, for example to initialise your variables.
+1. **Target Results or Operations**. You tell Tensorflow what parts of the graph you want to return values for, and it will **automatically figure out what calculations within need to be run**. You can also call operations, for example, to initialise your variables.
 
-2. **Inputs As Required ('Feed Dict')**. Some calculations will you to provide data. In this case, you construct the graph with a **placeholder** for this data, and feed it in at computation time. Not all calculations or operations will require an input - for many, all the information is already contained in the graph.
+2. **Inputs As Required ('Feed Dict')**. In most calculations you will provide the input data ad-hoc. In this case, you construct the graph with a **placeholder** for this data, and feed it in at computation time. Not all calculations or operations will require an input - for many, all the information is already contained in the graph.
 
 {% highlight python %}
 # Import Tensorflow and Numpy
-import tensorflow as tf
+import Tensorflow as tf
 import numpy as np
 
 # ======================
@@ -121,7 +121,7 @@ Loss = tf.pow(tf.add(Y,-tf.matmul(X,W)),2,name="Loss")
 with tf.Session() as sess: # set up the session
     sess.run(tf.initialize_all_variables())
     Model_Loss = sess.run(
-                Loss, # the first argument is the name of the tensorflow variabl you want to return
+                Loss, # the first argument is the name of the Tensorflow variabl you want to return
                 { # the second argument is the data for the placeholders
                   X: np.random.rand(10,10),
                   Y: np.random.rand(10).reshape(-1,1)
@@ -135,7 +135,7 @@ with tf.Session() as sess: # set up the session
 
 When we create a Neural Net that performs multiple tasks we want to have some parts of the network that are shared, and other parts of the network that are specific to each individual task. When we're training, we want information from each task to be transferred in the shared parts of the network.
 
-So, to start, let's draw a diagram of a simple two-task network that has a shared layer and a specific layer for each individual task. We've going to feed the outputs of this into our loss function with our targets. I've labelled where we're going to want to create placeholders in the graph.
+So, to start, let's draw a diagram of a simple two-task network that has a shared layer and a specific layer for each individual task. We're going to feed the outputs of this into our loss function with our targets. I've labelled where we're going to want to create placeholders in the graph.
 
 <img src='../images/basic_shared.png' style="max-height:300px">
 
@@ -144,7 +144,7 @@ So, to start, let's draw a diagram of a simple two-task network that has a share
 # ============
 
 # Import Tensorflow
-import tensorflow as tf
+import Tensorflow as tf
 
 # ======================
 # Define the Graph
@@ -189,7 +189,7 @@ Remember that Tensorflow automatically figures out which calculations are needed
 # ============
 
 # Import Tensorflow and Numpy
-import tensorflow as tf
+import Tensorflow as tf
 import numpy as np
 
 # ======================
@@ -258,13 +258,13 @@ with tf.Session() as session:
 
 Alternate training is a good idea when you have two different datasets for each of the different tasks (for example, translating from English to French and English to German). By designing a network in this way, you can improve the performance of each of your individual tasks without having to find more task-specific training data.
 
-Alternate training is the most common situation you'll find yourself in, because there aren't that many datasets that have two or more outputs. We'll come on to one example, but the clearest examples are where you want to build hierarchy into your tasks. For example, in vision, you might want one of your tasks to predict the rotation of an object, the other what the object would look like if you changes the camera angle. These two tasks are obviously related - in fact the rotation probably comes before the image generation.
+Alternate training is the most common situation you'll find yourself in, because there aren't that many datasets that have two or more outputs. We'll come on to one example, but the clearest examples are where you want to build hierarchy into your tasks. For example, in vision, you might want one of your tasks to predict the rotation of an object, the other what the object would look like if you changed the camera angle. These two tasks are obviously related - in fact the rotation probably comes before the image generation.
 
 ### Tips: When is Alternate Training Less Good?
 
 Alternate training can easily become biased towards a specific task. The first way is obvious - if one of your tasks has a far larger dataset than the other, then if you train in proportion to the dataset sizes your shared layer will contain more information about the more significant task.
 
-The second is less so. If you train alternately, the final task your model see will create a bias in the parameters. There isn't any obvious way that you can overcome this problem, but it does that mean that in circumstances where you don't have to train alternately, you shouldn't.
+The second is less so. If you train alternately, the final task in your model will create a bias in the parameters. There isn't any obvious way that you can overcome this problem, but it does mean that in circumstances where you don't have to train alternately, you shouldn't.
 
 ## Training at the Same Time - Joint Training
 
@@ -277,7 +277,7 @@ When you have a dataset with multiple labels for each input, what you really wan
 # ============
 
 # Import Tensorflow and Numpy
-import tensorflow as tf
+import Tensorflow as tf
 import numpy as np
 
 # ======================

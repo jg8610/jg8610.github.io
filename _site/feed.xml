@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.1.6">Jekyll</generator><link href="http://jg8610.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="http://jg8610.github.io/" rel="alternate" type="text/html" /><updated>2016-07-12T15:35:34+01:00</updated><id>http://jg8610.github.io/</id><title>Jonathan Godwin</title><subtitle>Machine Learning</subtitle><entry><title>Multi-Task Learning in Tensorflow (Part 1)</title><link href="http://jg8610.github.io/Multi-Task/" rel="alternate" type="text/html" title="Multi-Task Learning in Tensorflow (Part 1)" /><published>2016-06-30T00:00:00+01:00</published><updated>2016-06-30T00:00:00+01:00</updated><id>http://jg8610.github.io/Multi-Task</id><content type="html" xml:base="http://jg8610.github.io/Multi-Task/">&lt;h3 id=&quot;a-step-by-step-tutorial-on-how-to-create-multi-task-neural-nets-in-tensorflow&quot;&gt;A step-by-step tutorial on how to create multi-task neural nets in Tensorflow.&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.1.6">Jekyll</generator><link href="http://jg8610.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="http://jg8610.github.io/" rel="alternate" type="text/html" /><updated>2016-07-12T16:06:07+01:00</updated><id>http://jg8610.github.io/</id><title>Jonathan Godwin</title><subtitle>Machine Learning</subtitle><entry><title>Multi-Task Learning in Tensorflow (Part 1)</title><link href="http://jg8610.github.io/Multi-Task/" rel="alternate" type="text/html" title="Multi-Task Learning in Tensorflow (Part 1)" /><published>2016-06-30T00:00:00+01:00</published><updated>2016-06-30T00:00:00+01:00</updated><id>http://jg8610.github.io/Multi-Task</id><content type="html" xml:base="http://jg8610.github.io/Multi-Task/">&lt;h3 id=&quot;a-step-by-step-tutorial-on-how-to-create-multi-task-neural-nets-in-tensorflow&quot;&gt;A step-by-step tutorial on how to create multi-task neural nets in Tensorflow.&lt;/h3&gt;
 
 &lt;p&gt;A jupyter notebook accompanies this blog post. Please download &lt;a href=&quot;https://github.com/jg8610/multi-task-part-1-notebook/tree/master&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
@@ -14,7 +14,7 @@
 
 &lt;p&gt;It’s one of the most interesting and exciting areas of research for Machine Learning in coming years, radically reducing the amount of data required to learn new concepts. One of the great promises of Deep Learning is that, with the power of the models and simple ways to share parameters between tasks, we should be able to make significant progress in multi-task learning.&lt;/p&gt;
 
-&lt;p&gt;As I started to experiment in this area I came across a bit of a road block - while it was an easy to understand the architecture changes required to implement multi-task learning, it was harder to figure out how to implement it in Tensorflow. To do anything but standard nets in Tensorflow requires a good understanding of how it works, but most of the stock examples don’t provide helpful guidance. I hope the following tutorial explains some key concepts simply, and helps those who are struggling.&lt;/p&gt;
+&lt;p&gt;As I started to experiment in this area I came across a bit of a road block - while it was easy to understand the architecture changes required to implement multi-task learning, it was harder to figure out how to implement it in Tensorflow. To do anything but standard nets in Tensorflow requires a good understanding of how it works, but most of the stock examples don’t provide helpful guidance. I hope the following tutorial explains some key concepts simply, and helps those who are struggling.&lt;/p&gt;
 
 &lt;h2 id=&quot;what-we-are-going-to-do&quot;&gt;What We Are Going To Do&lt;/h2&gt;
 
@@ -34,7 +34,7 @@
     &lt;p&gt;&lt;strong&gt;Build A Graph for POS Tagging and Shallow Parsing&lt;/strong&gt;. We’ll fill in a template that trains a net for two related linguistic tasks. Don’t worry, you don’t need to know what they are!&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Train A Net Jointly And Separately&lt;/strong&gt;. We’ll actually train a model in two different ways. You should be able to do this on your laptop.&lt;/p&gt;
+    &lt;p&gt;&lt;strong&gt;Train A Net Jointly and Separately&lt;/strong&gt;. We’ll actually train a model in two different ways. You should be able to do this on your laptop.&lt;/p&gt;
   &lt;/li&gt;
 &lt;/ol&gt;
 
@@ -63,7 +63,7 @@
 &lt;p&gt;&lt;img src=&quot;../images/toy.png&quot; style=&quot;max-height:300px&quot; /&gt;&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# Import Tensorflow and numpy&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tensorflow&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tf&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Tensorflow&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tf&lt;/span&gt;
 &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;numpy&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;np&lt;/span&gt;
 
 &lt;span class=&quot;c&quot;&gt;# ======================&lt;/span&gt;
@@ -88,27 +88,27 @@
     &lt;p&gt;&lt;strong&gt;If we were to run this code right now, we would get no output&lt;/strong&gt;. Remember that a Computation Graph is just a template - it doesn’t do anything. If we want an answer, we have to tell Tensorflow to run the computation using a &lt;strong&gt;Session&lt;/strong&gt;.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;We haven’t explictly created a graph object&lt;/strong&gt;. You might expect that we would have a create a graph object somewhere in order for Tensorflow to know that we wanted to create a graph. In fact, by using the tensorflow operations, we are telling Tensorflow what parts of our code are in the graph.&lt;/p&gt;
+    &lt;p&gt;&lt;strong&gt;We haven’t explicitly created a graph object&lt;/strong&gt;. You might expect that we would have to create a graph object somewhere in order for Tensorflow to know that we wanted to create a graph. In fact, by using the Tensorflow operations, we are telling Tensorflow what parts of our code are in the graph.&lt;/p&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;&lt;strong&gt;Tip: Keep Your Graph Separate&lt;/strong&gt;. You’ll typically be doing a fair amount data manipulation and computation outside of the graph, which means keeping track of what is and isn’t available inside of python a bit confusing. I like to put my graph in a separate file, and often in a separate class to keep concerns separated, but this isn’t required.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Tip: Keep Your Graph Separate&lt;/strong&gt;. You’ll typically be doing a fair amount of data manipulation and computation outside of the graph, which means keeping track of what is and isn’t available inside of python a bit confusing. I like to put my graph in a separate file, and often in a separate class to keep concerns separated, but this isn’t required.&lt;/p&gt;
 
 &lt;h2 id=&quot;a-toy-example---linear-transformation-getting-results&quot;&gt;A Toy Example - Linear Transformation: Getting Results&lt;/h2&gt;
 
-&lt;p&gt;Computations on your Graph are conducted inside a tensorflow &lt;strong&gt;Session&lt;/strong&gt;. To get results from your session you need to provide it with two things: Target Results and Inputs.&lt;/p&gt;
+&lt;p&gt;Computations on your Graph are conducted inside a Tensorflow &lt;strong&gt;Session&lt;/strong&gt;. To get results from your session you need to provide it with two things: Target Results and Inputs.&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Target Results or Operations&lt;/strong&gt;. You tell tensorflow what parts of the graph you want to return values for, and it will &lt;strong&gt;automatically figure out what calculations within need to be run&lt;/strong&gt;. You can also call operations, for example to initialise your variables.&lt;/p&gt;
+    &lt;p&gt;&lt;strong&gt;Target Results or Operations&lt;/strong&gt;. You tell Tensorflow what parts of the graph you want to return values for, and it will &lt;strong&gt;automatically figure out what calculations within need to be run&lt;/strong&gt;. You can also call operations, for example, to initialise your variables.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Inputs As Required (‘Feed Dict’)&lt;/strong&gt;. Some calculations will you to provide data. In this case, you construct the graph with a &lt;strong&gt;placeholder&lt;/strong&gt; for this data, and feed it in at computation time. Not all calculations or operations will require an input - for many, all the information is already contained in the graph.&lt;/p&gt;
+    &lt;p&gt;&lt;strong&gt;Inputs As Required (‘Feed Dict’)&lt;/strong&gt;. In most calculations you will provide the input data ad-hoc. In this case, you construct the graph with a &lt;strong&gt;placeholder&lt;/strong&gt; for this data, and feed it in at computation time. Not all calculations or operations will require an input - for many, all the information is already contained in the graph.&lt;/p&gt;
   &lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;c&quot;&gt;# Import Tensorflow and Numpy&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tensorflow&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tf&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Tensorflow&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tf&lt;/span&gt;
 &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;numpy&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;np&lt;/span&gt;
 
 &lt;span class=&quot;c&quot;&gt;# ======================&lt;/span&gt;
@@ -129,7 +129,7 @@
 &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sess&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# set up the session&lt;/span&gt;
     &lt;span class=&quot;n&quot;&gt;sess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;initialize_all_variables&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
     &lt;span class=&quot;n&quot;&gt;Model_Loss&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sess&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-                &lt;span class=&quot;n&quot;&gt;Loss&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# the first argument is the name of the tensorflow variabl you want to return&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;Loss&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# the first argument is the name of the Tensorflow variabl you want to return&lt;/span&gt;
                 &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# the second argument is the data for the placeholders&lt;/span&gt;
                   &lt;span class=&quot;n&quot;&gt;X&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rand&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
                   &lt;span class=&quot;n&quot;&gt;Y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rand&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reshape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
@@ -142,7 +142,7 @@
 
 &lt;p&gt;When we create a Neural Net that performs multiple tasks we want to have some parts of the network that are shared, and other parts of the network that are specific to each individual task. When we’re training, we want information from each task to be transferred in the shared parts of the network.&lt;/p&gt;
 
-&lt;p&gt;So, to start, let’s draw a diagram of a simple two-task network that has a shared layer and a specific layer for each individual task. We’ve going to feed the outputs of this into our loss function with our targets. I’ve labelled where we’re going to want to create placeholders in the graph.&lt;/p&gt;
+&lt;p&gt;So, to start, let’s draw a diagram of a simple two-task network that has a shared layer and a specific layer for each individual task. We’re going to feed the outputs of this into our loss function with our targets. I’ve labelled where we’re going to want to create placeholders in the graph.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;../images/basic_shared.png&quot; style=&quot;max-height:300px&quot; /&gt;&lt;/p&gt;
 
@@ -150,7 +150,7 @@
 &lt;span class=&quot;c&quot;&gt;# ============&lt;/span&gt;
 
 &lt;span class=&quot;c&quot;&gt;# Import Tensorflow&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tensorflow&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tf&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Tensorflow&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tf&lt;/span&gt;
 
 &lt;span class=&quot;c&quot;&gt;# ======================&lt;/span&gt;
 &lt;span class=&quot;c&quot;&gt;# Define the Graph&lt;/span&gt;
@@ -191,7 +191,7 @@
 &lt;span class=&quot;c&quot;&gt;# ============&lt;/span&gt;
 
 &lt;span class=&quot;c&quot;&gt;# Import Tensorflow and Numpy&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tensorflow&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tf&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Tensorflow&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tf&lt;/span&gt;
 &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;numpy&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;np&lt;/span&gt;
 
 &lt;span class=&quot;c&quot;&gt;# ======================&lt;/span&gt;
@@ -257,13 +257,13 @@
 
 &lt;p&gt;Alternate training is a good idea when you have two different datasets for each of the different tasks (for example, translating from English to French and English to German). By designing a network in this way, you can improve the performance of each of your individual tasks without having to find more task-specific training data.&lt;/p&gt;
 
-&lt;p&gt;Alternate training is the most common situation you’ll find yourself in, because there aren’t that many datasets that have two or more outputs. We’ll come on to one example, but the clearest examples are where you want to build hierarchy into your tasks. For example, in vision, you might want one of your tasks to predict the rotation of an object, the other what the object would look like if you changes the camera angle. These two tasks are obviously related - in fact the rotation probably comes before the image generation.&lt;/p&gt;
+&lt;p&gt;Alternate training is the most common situation you’ll find yourself in, because there aren’t that many datasets that have two or more outputs. We’ll come on to one example, but the clearest examples are where you want to build hierarchy into your tasks. For example, in vision, you might want one of your tasks to predict the rotation of an object, the other what the object would look like if you changed the camera angle. These two tasks are obviously related - in fact the rotation probably comes before the image generation.&lt;/p&gt;
 
 &lt;h3 id=&quot;tips-when-is-alternate-training-less-good&quot;&gt;Tips: When is Alternate Training Less Good?&lt;/h3&gt;
 
 &lt;p&gt;Alternate training can easily become biased towards a specific task. The first way is obvious - if one of your tasks has a far larger dataset than the other, then if you train in proportion to the dataset sizes your shared layer will contain more information about the more significant task.&lt;/p&gt;
 
-&lt;p&gt;The second is less so. If you train alternately, the final task your model see will create a bias in the parameters. There isn’t any obvious way that you can overcome this problem, but it does that mean that in circumstances where you don’t have to train alternately, you shouldn’t.&lt;/p&gt;
+&lt;p&gt;The second is less so. If you train alternately, the final task in your model will create a bias in the parameters. There isn’t any obvious way that you can overcome this problem, but it does mean that in circumstances where you don’t have to train alternately, you shouldn’t.&lt;/p&gt;
 
 &lt;h2 id=&quot;training-at-the-same-time---joint-training&quot;&gt;Training at the Same Time - Joint Training&lt;/h2&gt;
 
@@ -275,7 +275,7 @@
 &lt;span class=&quot;c&quot;&gt;# ============&lt;/span&gt;
 
 &lt;span class=&quot;c&quot;&gt;# Import Tensorflow and Numpy&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tensorflow&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tf&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Tensorflow&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tf&lt;/span&gt;
 &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;numpy&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;np&lt;/span&gt;
 
 &lt;span class=&quot;c&quot;&gt;# ======================&lt;/span&gt;

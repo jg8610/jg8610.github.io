@@ -4,7 +4,7 @@ title: About
 permalink: /about/
 ---
 
-I'm currently studying for a Msc in Machine Learning from UCL with a specialism in deep multi-task learning for NLP.
+I'm currently studying for a Msc in Machine Learning from UCL with a specialism in deep multi-task learning for NLP. I'll be finishing in September and will looking for jobs/research roles where I can use this skill set on interesting problems.
 
 Before that I spent 4 years at Social Finance Ltd in a range of roles, but ended up leading the design of their data and machine learning products to improve public services for vulnerable children. My experience is at the intersection of data, programming and public policy.
 
