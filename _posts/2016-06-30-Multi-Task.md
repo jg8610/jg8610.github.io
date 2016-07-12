@@ -12,13 +12,13 @@ author: Jonathan Godwin
 
 ## Why Multi-Task Learning
 
-When you think about the way people learn to do new things, they often use their experience and knowledge of the world to speed up the learning process. When I learn a new language, especially a related one, I use my knowledge languages I already speak to make shortcuts. The process works the other way too - learning a new language can help you understand and speak your own better.
+When you think about the way people learn to do new things, they often use their experience and knowledge of the world to speed up the learning process. When I learn a new language, especially a related one, I use my knowledge of languages I already speak to make shortcuts. The process works the other way too - learning a new language can help you understand and speak your own better.
 
-Our brains learn to do multiple different tasks at the same time - we have the same brain architecture whether we are translating English to German or English to French. If we were to use a Machine Learning algorithm to do both of these tasks, we would call 'multi-task' learning.
+Our brains learn to do multiple different tasks at the same time - we have the same brain architecture whether we are translating English to German or English to French. If we were to use a Machine Learning algorithm to do both of these tasks, we might call that 'multi-task' learning.
 
 It's one of the most interesting and exciting areas of research for Machine Learning in coming years, radically reducing the amount of data required to learn new concepts. One of the great promises of Deep Learning is that, with the power of the models and simple ways to share parameters between tasks, we should be able to make significant progress in multi-task learning.
 
-As I started to experiment in this area I came across a bit of a road block - while it was an easy to understand the architecture changes required to implement multi-task learning, it was harder to figure out how to implement it in Tensorflow. To do anything but standard nets in Tensorflow requires a good understanding of how Tensorflow works, but most of the stock examples don't provide helpful guidance. I hope the following tutorial explains some key concepts simply, and helps those who are struggling.
+As I started to experiment in this area I came across a bit of a road block - while it was an easy to understand the architecture changes required to implement multi-task learning, it was harder to figure out how to implement it in Tensorflow. To do anything but standard nets in Tensorflow requires a good understanding of how it works, but most of the stock examples don't provide helpful guidance. I hope the following tutorial explains some key concepts simply, and helps those who are struggling.
 
 ## What We Are Going To Do
 
@@ -59,8 +59,9 @@ We're going to look at the graph for a simple calculation - a linear transformat
 <img src='../images/toy.png' style="max-height:300px">
 
 {% highlight python %}
-# Import Tensorflow
+# Import Tensorflow and numpy
 import tensorflow as tf
+import numpy as np
 
 # ======================
 # Define the Graph
@@ -71,7 +72,8 @@ X = tf.placeholder("float",[10, 10],name="X") # Our input is 10x10
 Y = tf.placeholder("float", [10, 1],name="Y") # Our output is 10x1
 
 # Create a Trainable Variable, "W", our weights for the linear transformation
-W = tf.Variable([10,1], "W")
+initial_W = np.zeros((10,1))
+W = tf.Variable(initial_W, name="W", dtype="float32")
 
 # Define Your Loss Function
 Loss = tf.pow(tf.add(Y,-tf.matmul(X,W)),2,name="Loss")
@@ -95,7 +97,7 @@ Computations on your Graph are conducted inside a tensorflow **Session**. To get
 2. **Inputs As Required ('Feed Dict')**. Some calculations will you to provide data. In this case, you construct the graph with a **placeholder** for this data, and feed it in at computation time. Not all calculations or operations will require an input - for many, all the information is already contained in the graph.
 
 {% highlight python %}
-# Import Tensorflow
+# Import Tensorflow and Numpy
 import tensorflow as tf
 import numpy as np
 
@@ -108,22 +110,21 @@ X = tf.placeholder("float",[10, 10],name="X") # Our input is 10x10
 Y = tf.placeholder("float", [10, 1],name="Y") # Our output is 10x1
 
 # Create a Trainable Variable, "W", our weights for the linear transformation
-W = tf.Variable([10,1], "W")
+initial_W = np.zeros((10,1))
+W = tf.Variable(initial_W, name="W", dtype="float32")
 
 # Define Your Loss Function
 Loss = tf.pow(tf.add(Y,-tf.matmul(X,W)),2,name="Loss")
 
-# ======================
-# Run The Computation Using A Session
-# ======================
-
-with sess = tf.session(): # set up the session
-  Model_Loss = sess.run(
+with tf.Session() as sess: # set up the session
+    sess.run(tf.initialize_all_variables())
+    Model_Loss = sess.run(
                 Loss, # the first argument is the name of the tensorflow variabl you want to return
                 { # the second argument is the data for the placeholders
-                  X: np.random([10,10]),
-                  Y: np.randomd([10,1])
+                  X: np.random.rand(10,10),
+                  Y: np.random.rand(10).reshape(-1,1)
                 })
+    print(Model_Loss)
 {% endhighlight %}
 
 ------
@@ -185,8 +186,9 @@ Remember that Tensorflow automatically figures out which calculations are needed
 #  GRAPH CODE
 # ============
 
-# Import Tensorflow
+# Import Tensorflow and Numpy
 import tensorflow as tf
+import numpy as np
 
 # ======================
 # Define the Graph
@@ -194,26 +196,31 @@ import tensorflow as tf
 
 # Define the Placeholders
 X = tf.placeholder("float", [10, 10], name="X")
-Y1 = tf.placeholder("float", [10, 1], name="Y1")
-Y2 = tf.placeholder("float", [10, 1], name="Y2")
+Y1 = tf.placeholder("float", [10, 20], name="Y1")
+Y2 = tf.placeholder("float", [10, 20], name="Y2")
 
 # Define the weights for the layers
-shared_layer_weights = tf.Variable([10,20], name="share_W")
-Y1_layer_weights = tf.Variable([20,1], name="share_Y1")
-Y2_layer_weights = tf.Variable([20,1], name="share_Y2")
+
+initial_shared_layer_weights = np.random.rand(10,20)
+initial_Y1_layer_weights = np.random.rand(20,20)
+initial_Y2_layer_weights = np.random.rand(20,20)
+
+shared_layer_weights = tf.Variable(initial_shared_layer_weights, name="share_W", dtype="float32")
+Y1_layer_weights = tf.Variable(initial_Y1_layer_weights, name="share_Y1", dtype="float32")
+Y2_layer_weights = tf.Variable(initial_Y2_layer_weights, name="share_Y2", dtype="float32")
 
 # Construct the Layers with RELU Activations
 shared_layer = tf.nn.relu(tf.matmul(X,shared_layer_weights))
 Y1_layer = tf.nn.relu(tf.matmul(shared_layer,Y1_layer_weights))
-Y2_layer_weights = tf.nn.relu(tf.matmul(shared_layer,Y2_layer_weights))
+Y2_layer = tf.nn.relu(tf.matmul(shared_layer,Y2_layer_weights))
 
 # Calculate Loss
-Y1_Loss = tf.nn.l2_loss(Y1,Y1_layer)
-Y2_Loss = tf.nn.l2_loss(Y2,Y2_layer)
+Y1_Loss = tf.nn.l2_loss(Y1-Y1_layer)
+Y2_Loss = tf.nn.l2_loss(Y2-Y2_layer)
 
-# Create Optimisers
-Y1_Op = tf.train.AdamOptimizer().minimize(Y1_Loss) # Adam Optimizer
-Y2_Op = tf.train.AdamOptimizer().minimize(Y2_Loss) # Adam Optimizer
+# optimisers
+Y1_op = tf.train.AdamOptimizer().minimize(Y1_Loss)
+Y2_op = tf.train.AdamOptimizer().minimize(Y2_Loss)
 {% endhighlight %}
 
 We can conduct Multi-Task learning by alternately calling each task optimiser, which means we can continually transfer some of the information from each task to the other. In a loose sense, we are discovering the 'commonality' between the tasks. The following code implements this for our easy example. If you are following along, paste this at the bottom of the previous code:
@@ -223,24 +230,26 @@ We can conduct Multi-Task learning by alternately calling each task optimiser, w
 # ==========================
 
 # open the session
-with tf.session as session:
-  for iters in range(10):
-    if np.random() < 0.5:
-      _, Y1_loss = session.run([Y1_op, Y1_loss],
-                        {
-                          X: np.random([10,20]),
-                          Y1: np.random([20,1]),
-                          Y2: np.random([20,1])
-                          })
-      print(Y1_loss)
-    else:
-      _, Y2_loss = session.run([Y1_op, Y1_loss],
-                        {
-                          X: np.random([10,20]),
-                          Y1: np.random([20,1]),
-                          Y2: np.random([20,1])
-                          })
-      print(Y2_loss)
+
+with tf.Session() as session:
+    session.run(tf.initialize_all_variables())
+    for iters in range(10):
+        if np.random.rand() < 0.5:
+            _, Y1_loss = session.run([Y1_op, Y1_Loss],
+                            {
+                              X: np.random.rand(10,10)*10,
+                              Y1: np.random.rand(10,20)*10,
+                              Y2: np.random.rand(10,20)*10
+                              })
+            print(Y1_loss)
+        else:
+            _, Y2_loss = session.run([Y2_op, Y2_Loss],
+                            {
+                              X: np.random.rand(10,10)*10,
+                              Y1: np.random.rand(10,20)*10,
+                              Y2: np.random.rand(10,20)*10
+                              })
+            print(Y2_loss)
 {% endhighlight %}
 
 ### Tips: When is Alternate Training Good?
@@ -265,8 +274,9 @@ When you have a dataset with multiple labels for each input, what you really wan
 #  GRAPH CODE
 # ============
 
-# Import Tensorflow
+# Import Tensorflow and Numpy
 import tensorflow as tf
+import numpy as np
 
 # ======================
 # Define the Graph
@@ -274,28 +284,49 @@ import tensorflow as tf
 
 # Define the Placeholders
 X = tf.placeholder("float", [10, 10], name="X")
-Y1 = tf.placeholder("float", [10, 1], name="Y1")
-Y2 = tf.placeholder("float", [10, 1], name="Y2")
+Y1 = tf.placeholder("float", [10, 20], name="Y1")
+Y2 = tf.placeholder("float", [10, 20], name="Y2")
 
 # Define the weights for the layers
-shared_layer_weights = tf.Variable([10,20], name="share_W")
-Y1_layer_weights = tf.Variable([20,1], name="share_Y1")
-Y2_layer_weights = tf.Variable([20,1], name="share_Y2")
+
+initial_shared_layer_weights = np.random.rand(10,20)
+initial_Y1_layer_weights = np.random.rand(20,20)
+initial_Y2_layer_weights = np.random.rand(20,20)
+
+shared_layer_weights = tf.Variable(initial_shared_layer_weights, name="share_W", dtype="float32")
+Y1_layer_weights = tf.Variable(initial_Y1_layer_weights, name="share_Y1", dtype="float32")
+Y2_layer_weights = tf.Variable(initial_Y2_layer_weights, name="share_Y2", dtype="float32")
 
 # Construct the Layers with RELU Activations
 shared_layer = tf.nn.relu(tf.matmul(X,shared_layer_weights))
 Y1_layer = tf.nn.relu(tf.matmul(shared_layer,Y1_layer_weights))
-Y2_layer_weights = tf.nn.relu(tf.matmul(shared_layer,Y2_layer_weights))
+Y2_layer = tf.nn.relu(tf.matmul(shared_layer,Y2_layer_weights))
 
 # Calculate Loss
-Y1_Loss = tf.nn.l2_loss(Y1,Y1_layer)
-Y2_Loss = tf.nn.l2_loss(Y2,Y2_layer)
+Y1_Loss = tf.nn.l2_loss(Y1-Y1_layer)
+Y2_Loss = tf.nn.l2_loss(Y2-Y2_layer)
+Joint_Loss = Y1_Loss + Y2_Loss
 
-# Calculate Joint Loss
-Joint_Loss = tf.add(Y1_Loss,Y2_Loss)
+# optimisers
+Optimiser = tf.train.AdamOptimizer().minimize(Joint_Loss)
+Y1_op = tf.train.AdamOptimizer().minimize(Y1_Loss)
+Y2_op = tf.train.AdamOptimizer().minimize(Y2_Loss)
 
-# Graph Optimiser
-Optimiser = tf.train.AdamOptimizer().minimize(Joint_Loss) # Adam Optimizer
+# Joint Training
+# Calculation (Session) Code
+# ==========================
+
+# open the session
+
+with tf.Session() as session:
+    session.run(tf.initialize_all_variables())
+    _, Joint_Loss = session.run([Optimiser, Joint_Loss],
+                    {
+                      X: np.random.rand(10,10)*10,
+                      Y1: np.random.rand(10,20)*10,
+                      Y2: np.random.rand(10,20)*10
+                      })
+    print(Joint_Loss)
 
 {% endhighlight %}
 
