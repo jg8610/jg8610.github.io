@@ -6,6 +6,8 @@ author: Jonathan Godwin
 
 ### A step-by-step tutorial on how to create multi-task neural nets in Tensorflow.
 
+A jupyter notebook accompanies this blog post. Please download [here](https://github.com/jg8610/multi-task-part-1-notebook/tree/master).
+
 -----
 
 # Introduction
